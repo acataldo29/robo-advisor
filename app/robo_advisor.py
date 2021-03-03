@@ -1,13 +1,40 @@
 # this is the "app/robo_advisor.py" file
 
-import dotenv
+from dotenv import load_dotenv
 import requests
 import pandas
+import json
+import os
 
-symbol = input("Please input the stock symbol you wish to search: ")
+load_dotenv()
+
+symbol = input("Please input the stock symbol(s) you wish to search (separated by ;): ").split(";", 3)
+
+ALPHAVANTAGE_API_KEY = os.getenv("ALPHAVANTAGE_API_KEY", default="IBM")
+
+#for i in range(0,len(symbol)):
+#    print(f"Stock Symbol: {symbol[i]}")
 
 
 
+if len(symbol) > 1:
+    for i in range(0, len(symbol)):
+        stocks_url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol={symbol[i]}&apikey={ALPHAVANTAGE_API_KEY}"
+        response = requests.get(stocks_url)
+        stock_info = json.loads(response.text)
+        print(type(stock_info))
+        print(stock_info)
+else:
+        stocks_url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol={symbol}&apikey={ALPHAVANTAGE_API_KEY}"
+        response = requests.get(stocks_url)
+        stock_info = json.loads(response.text)
+        print(type(stock_info))
+        print(stock_info)
+
+
+#for i in symbol:
+#    if i in stocks:
+#        print() 
 
 
 

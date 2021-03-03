@@ -4,3 +4,4 @@ python-dotenv
 pandas
 
 #environment name stocks-env
+#ALPHAVANTAGE_API_KEY="2LAMCMHNZLA9IEAS"
