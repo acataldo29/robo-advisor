@@ -6,92 +6,89 @@ import pandas
 import json
 import os
 import csv
+from datetime import datetime
 
 
 load_dotenv()
 
-# User Defined Function to capture necessasry info from JSON file
-#def price_info(symbol, )
+############## User Defined Functions ##############
+def to_usd(my_price):
+    """
+    Converts a numeric value to usd-formatted string, for printing and display purposes.
 
-symbol = input("Please input the stock symbol you wish to search: ") #.split(";", 3)
+    Param: my_price (int or float) like 4000.444444
 
+    Example: to_usd(4000.444444)
+
+    Returns: $4,000.44
+    """
+    return f"${my_price:,.2f}" 
+############## User Input/Data Handling ############
 ALPHAVANTAGE_API_KEY = os.getenv("ALPHAVANTAGE_API_KEY", default="IBM")
 
-if len(list(symbol)) > 1 and len(list(symbol)) < 5:
-        stocks_url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={symbol}&outputsize=compact&datatype=json&apikey={ALPHAVANTAGE_API_KEY}"
-        response = requests.get(stocks_url)
-        stock_info = json.loads(response.text)
-else:
-        quit()
+while True:
+        symbol = input("Please input the stock symbol you wish to search: ") # .split(";", 3)
+        if len(list(symbol)) > 1 and len(list(symbol)) < 5:
+                stocks_url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={symbol}&outputsize=compact&datatype=json&apikey={ALPHAVANTAGE_API_KEY}"
+                response = requests.get(stocks_url)
+                stock_dict = json.loads(response.text)
+                print(stock_dict.keys())
+        else:
+                print("That input is invalid. Please try again")
+                input("Please input the stock symbol you wish to search: ") # .split(";", 3)
 
-print(stock_info.keys())
-prices = []
-for date, daily_data in stock_info["Time Series (Daily)"].items():
-        record = {
-                "date": date,
-                "open": float(daily_data["1. open"]),
-                "high": float(daily_data["2. high"]),
-                "low": float(daily_data["3. low"]),
-                "close": float(daily_data["4. close"]),
-                "volume": int(daily_data["5. volume"]),
-        }
-        prices.append(record)
+        prices = []
+        for date, daily_data in stock_dict["Time Series (Daily)"].items():
+                record = {
+                        "date": date,
+                        "open": float(daily_data["1. open"]),
+                        "high": float(daily_data["2. high"]),
+                        "low": float(daily_data["3. low"]),
+                        "close": float(daily_data["4. close"]),
+                        "volume": int(daily_data["5. volume"]),
+                }     
+                prices.append(record)
+        prices_df = pandas.DataFrame(prices)
+        prices_df.to_csv(f"data/prices_{symbol}.csv")
 
-
-prices_df = pandas.DataFrame(prices)
-prices_df.to_csv(f"data/prices_{symbol}.csv")
-
-
-
-
-
-
-#for i in price
-
-#csv_file_path = f"~/Desktop/Georgetown/Senior_Year/Spring_2021/OPIM_243/robo-advisor/data/prices_{symbol}.csv"
-#with open(f"data/prices_{symbol}.csv", "w") as csv_file:
-       #writer = csv.DictWriter(csv_file, fieldnames=stock_info.keys())
-       #writer.writeheader()
-       #writer.writerows(stock_info)
-
-
-#if len(symbol) > 1:
-#        for i in range(0, len(symbol)):
-#                stocks_url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol={symbol[i]}&apikey={ALPHAVANTAGE_API_KEY}"
-#                response = requests.get(stocks_url)
-#                stock_info = json.loads(response.text)
-#                print(type(stock_info))
-#                print(stock_info)
-#else:
-#        stocks_url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol={symbol}&apikey={ALPHAVANTAGE_API_KEY}"
-#        response = requests.get(stocks_url)
-#        stock_info = json.loads(response.text)
-#        print(type(stock_info))
-#        print(stock_info)
-
-
-#for i in symbol:
-#    if i in stocks:
-#        print() 
+        ############## Print Necessary Information ##############
+        print("-------------------------")
+        print(f"SELECTED SYMBOL: {symbol}")
+        print("-------------------------")
+        print("REQUESTING STOCK MARKET DATA...")
+        today = datetime.now()
+        today = today.strftime("%Y-%m-%d %I:%M %p")
+        print(f"REQUEST AT: {today}")
+        print("-------------------------")
+        print("LATEST DAY:", prices_df["date"].max())
+        print("LATEST CLOSE:", to_usd(prices_df["close"][0]))
+        print("RECENT HIGH:", to_usd(prices_df["high"].max()))
+        print("RECENT LOW:", to_usd(prices_df["low"].max()))
+        print("-------------------------")
+        #create recommendation criteria
+        if prices_df["close"][0]/prices_df["high"].max() > 0.95:
+                print("CONFIDENCE LEVEL: High")
+                print(f"REASON: {symbol}'s latest closing price was greater than 25% of the recent high")
+                print("-------------------------")        
+        elif prices_df["close"][0]/prices_df["high"].max() > 0.75:
+                print("CONFIDENCE LEVEL: Medium")
+                print(f"REASON: {symbol}'s latest closing price was greater than 75% of the recent high, but less than 95%")
+                print("-------------------------")
+        else:
+                print("CONFIDENCE LEVEL: Low")
+                print(f"REASON: {symbol}'s latest closing price was less than 75% of the recent high")
+                print("-------------------------")
 
 
-
-
-
-
-print("-------------------------")
-print("SELECTED SYMBOL: XYZ")
-print("-------------------------")
-print("REQUESTING STOCK MARKET DATA...")
-print("REQUEST AT: 2018-02-20 02:00pm")
-print("-------------------------")
-print("LATEST DAY: 2018-02-20")
-print("LATEST CLOSE: $100,000.00")
-print("RECENT HIGH: $101,000.00")
-print("RECENT LOW: $99,000.00")
-print("-------------------------")
-print("RECOMMENDATION: BUY!")
-print("RECOMMENDATION REASON: TODO")
-print("-------------------------")
-print("HAPPY INVESTING!")
-print("-------------------------")
+        additional = input("Would you like to search for another symbol? [Y/N]: ")
+        if additional == "N":
+                break
+                exit()    
+        elif additional not in ("Y", "N"):
+                print("That inupt is invalid. Please try again")
+                input("Would you like to search for another symbol? [Y/N]: ")
+        else:
+                True
+                symbol
+        
+                
