@@ -7,7 +7,9 @@ import json
 import os
 import csv
 from datetime import datetime
-
+import seaborn as sns
+import matplotlib.pyplot as plt 
+import numpy as np
 
 load_dotenv()
 
@@ -27,15 +29,14 @@ def to_usd(my_price):
 ALPHAVANTAGE_API_KEY = os.getenv("ALPHAVANTAGE_API_KEY", default="IBM")
 
 while True:
-        symbol = input("Please input the stock symbol you wish to search: ") # .split(";", 3)
-        if len(list(symbol)) > 1 and len(list(symbol)) < 5:
+        symbol = input("Please input the stock symbol you wish to search: ") 
+        if len(list(symbol)) > 1 and len(list(symbol)) < 5: #Alter this line to allow longer symbols
                 stocks_url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={symbol}&outputsize=compact&datatype=json&apikey={ALPHAVANTAGE_API_KEY}"
                 response = requests.get(stocks_url)
                 stock_dict = json.loads(response.text)
-                print(stock_dict.keys())
         else:
                 print("That input is invalid. Please try again")
-                input("Please input the stock symbol you wish to search: ") # .split(";", 3)
+                input("Please input the stock symbol you wish to search: ") 
 
         prices = []
         for date, daily_data in stock_dict["Time Series (Daily)"].items():
@@ -79,9 +80,15 @@ while True:
                 print(f"REASON: {symbol}'s latest closing price was less than 75% of the recent high")
                 print("-------------------------")
 
-
+        #Create line plot        
+        plot = sns.lineplot(data=prices_df, x = prices_df["date"], y=prices_df["close"]).set(title = f"Closing Price of {symbol}, Last 100 Days", ylabel = "Price", xlabel="Date")
+        plt.savefig(f"plots/prices_plot_{symbol}.png", dpi=300)
+        
         additional = input("Would you like to search for another symbol? [Y/N]: ")
         if additional == "N":
+                print("-------------------------")
+                print("THANK YOU! GOOD LUCK!")
+                print("-------------------------")
                 break
                 exit()    
         elif additional not in ("Y", "N"):
@@ -91,4 +98,4 @@ while True:
                 True
                 symbol
         
-                
+#I couldn't figure out the x-axis labels for the graphs
