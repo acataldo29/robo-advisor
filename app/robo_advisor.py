@@ -9,7 +9,6 @@ import csv
 from datetime import datetime
 import seaborn as sns
 import matplotlib.pyplot as plt 
-import numpy as np
 
 load_dotenv()
 
